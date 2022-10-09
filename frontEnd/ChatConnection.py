@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 import sys
 
 #temp
+from frontEnd.ChatConnected import ChatConnectedMenu
 from backEnd.client import ChatClient
 
 class ChatConnectionMenu(QWidget):
@@ -52,14 +53,19 @@ class ChatConnectionMenu(QWidget):
         name = self.nicknameLineEdit.text()
         port = self.portLineEdit.text()
         print(address,name,port)
-        ChatClient(name,port,address)
+        self.client = ChatClient(name,port,address)
+        self.connectionMenu = ChatConnectedMenu(self.client)
+        #connectionMenu.display()
+        #client.run()
 
 
     def connectActions(self):
-        self.exitBtn.clicked.connect(QCoreApplication.instance().quit)
+        self.exitBtn.clicked.connect(self.exitApplication)
         self.connectBtn.clicked.connect(self.connectToServer)
    
-
+    def exitApplication(self):
+        self.client.cleanup
+        QCoreApplication.instance().quit
 
     def display(self):
         self.show()

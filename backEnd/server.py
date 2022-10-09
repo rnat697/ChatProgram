@@ -17,7 +17,15 @@ class ChatServer(object):
     def __init__(self, backlog=5):
         self.clients = 0
         self.clientmap = {}
+        self.listOfAllClients = {}
+        self.clientGroupHost = {}
+        self.clientSockets = {}
+        self.numGroups = 0
+        ## TO ADD SOMETING ABOUT GROUPS
+
         self.outputs = []  # list output sockets
+
+        # ADD CERTIFICATE / ENCRYPTION
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind((SERVER_HOST, SERVER_PORT))
@@ -41,7 +49,10 @@ class ChatServer(object):
         """ Return the name of the client """
         info = self.clientmap[client]
         host, name = info[0][0], info[1]
-        return '@'.join((name, host))
+        return name
+
+    def getClients(self):
+        return self.clientmap
 
     def run(self):
         # inputs = [self.server, sys.stdin]
@@ -67,44 +78,54 @@ class ChatServer(object):
 
                     # Compute client name and send back
                     self.clients += 1
-                    send(client, f'CLIENT: {str(address[0])}')
+                    send(client, f'CLIENT: {str(address)}')
                     inputs.append(client)
 
                     self.clientmap[client] = (address, cname)
+                    self.clientSockets[(address[0], address[1], cname)] = client
+                    self.clientGroupHost[(address[0], address[1], cname)] =  []
+                    self.listOfAllClients[(address[0], address[1], cname)] = []
                     # Send joining information to other clients
-                    msg = f'\n(Connected: New client ({self.clients}) from {self.get_client_name(client)})'
-                    for output in self.outputs:
-                        send(output, msg)
+                    # msg = f'\n(Connected: New client ({self.clients}) from {self.get_client_name(client)})'
+                    # for output in self.outputs:
+                    #     send(output, msg)
                     self.outputs.append(client)
 
-                # elif sock == sys.stdin:
-                #     # didn't test sys.stdin on windows system
-                #     # handle standard input
-                #     cmd = sys.stdin.readline().strip()
-                #     if cmd == 'list':
-                #         print(self.clientmap.values())
-                #     elif cmd == 'quit':
-                #         running = False
                 else:
                     # handle all other sockets
                     try:
                         data = receive(sock)
                         if data:
                             # Send as new client's message...
-                            msg = f'\n#[{self.get_client_name(sock)}]>> {data}'
+                            # msg = f'\n#[{self.get_client_name(sock)}]>> {data}'
 
-                            # Send data to all except ourself
-                            for output in self.outputs:
-                                if output != sock:
-                                    send(output, msg)
+                            # # Send data to all except ourself
+                            # for output in self.outputs:
+                            #     if output != sock:
+                            #         send(output, msg)
+                            if (type(data) == int):
+                                if(data == 2): # when client requests for list of all clients and groups
+                                    send(sock, [self.listOfAllClients,self.clientGroupHost])
+                                if(data == 3): # when client made a group chat
+                                    # TO DO ADD PPL TO GROUP CHAT
+                                    self.numGroups += 1
+                                    groupName = "Group Chat " + str(self.numGroups) + " by " + cname
+                                    self.clientGroupHost[(address[0], address[1], cname)] =  [self.numGroups, groupName]
                         else:
                             print(f'Chat server: {sock.fileno()} hung up')
+                            # for client_socket in self.clientSockets.value():
+                            #     if(client  == client_socket):
+                                    
+
+
+
+
                             self.clients -= 1
                             sock.close()
                             inputs.remove(sock)
                             self.outputs.remove(sock)
 
-                            # Sending client leaving information to others
+                            # Sending client leaving information to others  BEED TO REMOVE FROM DICTIONARY
                             msg = f'\n(Now hung up: Client from {self.get_client_name(sock)})'
 
                             for output in self.outputs:

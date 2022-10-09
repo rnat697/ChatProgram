@@ -12,11 +12,11 @@ SERVER_HOST = 'localhost'
 
 stop_thread = False
 
-def get_and_send(client):
-    while not stop_thread:
-        data = sys.stdin.readline().strip()
-        if data:
-            send(client.sock, data)
+# def get_and_send(client, data):
+#     while not stop_thread:
+#         if data:
+#             send(client.sock, data)
+
 
 class ChatClient():
     """ A command line chat client using select """
@@ -39,12 +39,15 @@ class ChatClient():
             # Send my name...
             send(self.sock, 'NAME: ' + self.name)
             data = receive(self.sock)
-            
+            print(data)
             # Contains client address, set it
-            addr = data.split('CLIENT: ')[1]
-            self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
+            addr = data.split('CLIENT: ')[1][1:-1].split(", ")
+            print(addr)
+            self.address = addr[0]
+            self.portAddr = int(addr[1])
+            #self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
 
-            threading.Thread(target=get_and_send, args=(self,)).start()
+            #threading.Thread(target=get_and_send, args=(self,)).start()
 
         except socket.error as e:
             print(f'Failed to connect to chat server @ port {self.port}')
@@ -53,13 +56,31 @@ class ChatClient():
     def cleanup(self):
         """Close the connection and wait for the thread to terminate."""
         self.sock.close()
+   
+    # actuall might not need these below idk
+    def getData(self):
+        readable, writeable, exceptional = select.select([self.sock], [], [])
+        for sock in readable:
+            if sock == self.sock:
+                data = receive(self.sock)
+                if not data:
+                    print('Client shutting down.')
+                    self.connected = False
+                    break
+                else:
+                    return data
+    
+    def sendData(self,data):
+        if data:
+            send(self.sock, data)
 
+# might not need this
     def run(self):
         """ Chat client main loop """
         while self.connected:
             try:
-                sys.stdout.write(self.prompt)
-                sys.stdout.flush()
+                #sys.stdout.write(self.prompt)
+                #sys.stdout.flush()
 
                 # Wait for input from stdin and socket
                 # readable, writeable, exceptional = select.select([0, self.sock], [], [])
