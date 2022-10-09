@@ -115,10 +115,6 @@ class ChatServer(object):
                             print(f'Chat server: {sock.fileno()} hung up')
                             # for client_socket in self.clientSockets.value():
                             #     if(client  == client_socket):
-                                    
-
-
-
 
                             self.clients -= 1
                             sock.close()

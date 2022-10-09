@@ -11,6 +11,7 @@ from frontEnd.GroupAndClientsThread import GroupAndClientsThread
 
 
 
+
 class ChatConnectedMenu(QWidget):
     def __init__(self,client):
         super().__init__()
@@ -63,17 +64,18 @@ class ChatConnectedMenu(QWidget):
         # self.thread.quit()
         # self.thread.wait()
         
-        self.threadClients.stop()
-        
+        self.threadClients.quit()
         self.client.cleanup()
-        QCoreApplication.instance().quit
+        self.close()
+
 
     def display(self):
         self.show()
         self.runGroupNClientsThread()
 
     def showClientInfo(self, info):
-        self.tbClients.clear()
+        # Goes through the client dictionary and adds the name of the clients to the text browser
+        self.tbClients.clear() # clears it first
         if(len(info) >0):
             for items in info:
                 name = items[2]
@@ -81,7 +83,8 @@ class ChatConnectedMenu(QWidget):
                 self.tbClients.append(name)
     
     def showGroupsInfo(self,info):
-        self.tbGroupChats.clear()
+        # Goes through the group dictionary and adds the name of the groups to the text browser
+        self.tbGroupChats.clear() # clears it first to avoid duplications
         for items in info.values():
             print("from group: ", items)
             if(not items): # if empty

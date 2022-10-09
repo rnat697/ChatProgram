@@ -55,9 +55,9 @@ class ChatClient():
 
     def cleanup(self):
         """Close the connection and wait for the thread to terminate."""
+        print("Closing client socket")
         self.sock.close()
-   
-    # actuall might not need these below idk
+ 
     def getData(self):
         readable, writeable, exceptional = select.select([self.sock], [], [])
         for sock in readable:

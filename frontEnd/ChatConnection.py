@@ -60,12 +60,9 @@ class ChatConnectionMenu(QWidget):
 
 
     def connectActions(self):
-        self.exitBtn.clicked.connect(self.exitApplication)
+        self.exitBtn.clicked.connect(QCoreApplication.instance().quit)
         self.connectBtn.clicked.connect(self.connectToServer)
    
-    def exitApplication(self):
-        self.client.cleanup
-        QCoreApplication.instance().quit
 
     def display(self):
         self.show()
