@@ -113,6 +113,7 @@ class ChatServer(object):
                                     self.clientGroupHost[(address[0], address[1], cname)] =  [self.numGroups, groupName]
                         else:
                             print(f'Chat server: {sock.fileno()} hung up')
+                            # remove client from all client list and group chat lists
                             # for client_socket in self.clientSockets.value():
                             #     if(client  == client_socket):
 
@@ -121,7 +122,7 @@ class ChatServer(object):
                             inputs.remove(sock)
                             self.outputs.remove(sock)
 
-                            # Sending client leaving information to others  BEED TO REMOVE FROM DICTIONARY
+                            # Sending client leaving information to others
                             msg = f'\n(Now hung up: Client from {self.get_client_name(sock)})'
 
                             for output in self.outputs:
