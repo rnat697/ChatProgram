@@ -63,12 +63,12 @@ class ChatClient():
         for sock in readable:
             if sock == self.sock:
                 data = receive(self.sock)
-                if not data:
-                    print('Client shutting down.')
-                    self.connected = False
-                    break
-                else:
-                    return data
+                # if not data:
+                #     print('Client shutting down.')
+                #     self.connected = False
+                #     break
+                # else:
+                return data
     
     def sendData(self,data):
         if data:

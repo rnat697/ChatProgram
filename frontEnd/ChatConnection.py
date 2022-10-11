@@ -52,9 +52,11 @@ class ChatConnectionMenu(QWidget):
         address = self.IPLineEdit.text()
         name = self.nicknameLineEdit.text()
         port = self.portLineEdit.text()
-        print(address,name,port)
-        self.client = ChatClient(name,port,address)
-        self.connectionMenu = ChatConnectedMenu(self.client)
+
+        if (address and name and port): # check if line edits are not empty
+            print(address,name,port)
+            self.client = ChatClient(name,port,address)
+            self.connectionMenu = ChatConnectedMenu(self.client,name)
         #connectionMenu.display()
         #client.run()
 

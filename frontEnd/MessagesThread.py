@@ -1,19 +1,32 @@
 from email import message
-from PyQt5.QtCore import QtThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
+from time import sleep
 
-class MessagesThread(QtThread):
-    message = pyqtSignal(list)
+class MessagesThread(QThread):
+    message = pyqtSignal(str)
 
     def __init__(self,client):
         super().__init__()
         self.scanSocket = True
         self.client = client
 
+
     def run(self):
         while (self.scanSocket):
-            data = self.client.getData()
-            if data[1]!=data[2]:
+            sleep(0.5)
+            try:
+                data = self.client.getData()
+            except:
+                break
+            
+            print("MESSAGE from thread: ", data)
+            print("message type: ", type(data))
+
+            if (type(data) == str):
+                #print("MESSAGE from thread: ", data)
+                print("emitting data")
                 self.message.emit(data)
+        print("Finished msg thread")
     
     def stop(self):
         self.scanSocket = False

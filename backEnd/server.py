@@ -3,7 +3,6 @@ import socket
 import sys
 import signal
 
-
 from utils import *
 
 SERVER_HOST = 'localhost'
@@ -48,11 +47,8 @@ class ChatServer(object):
     def get_client_name(self, client):
         """ Return the name of the client """
         info = self.clientmap[client]
-        host, name = info[0][0], info[1]
-        return name
-
-    def getClients(self):
-        return self.clientmap
+        host, name = info[0], info[1]
+        return host,name
 
     def run(self):
         # inputs = [self.server, sys.stdin]
@@ -60,6 +56,7 @@ class ChatServer(object):
         self.outputs = []
         running = True
         while running:
+        
             try:
                 readable, writeable, exceptional = select.select(
                     inputs, self.outputs, [])
@@ -103,34 +100,60 @@ class ChatServer(object):
                             # for output in self.outputs:
                             #     if output != sock:
                             #         send(output, msg)
-                            if (type(data) == int):
-                                if(data == 2): # when client requests for list of all clients and groups
+
+                            # To differentiate between client to client messages and thread requests
+                            if (type(data) == int): # backend requests
+                                if(data == 2): # when thread requests for list of all clients and groups
                                     send(sock, [self.listOfAllClients,self.clientGroupHost])
+                                
                                 if(data == 3): # when client made a group chat
                                     # TO DO ADD PPL TO GROUP CHAT
                                     self.numGroups += 1
                                     groupName = "Group Chat " + str(self.numGroups) + " by " + cname
                                     self.clientGroupHost[(address[0], address[1], cname)] =  [self.numGroups, groupName]
-                        else:
-                            print(f'Chat server: {sock.fileno()} hung up')
-                            # remove client from all client list and group chat lists
-                            # for client_socket in self.clientSockets.value():
-                            #     if(client  == client_socket):
+                            else: 
+                                # Sending a message
+                                add, clientName = self.get_client_name(sock)
+                                msg = "["+ clientName + "]>> " + data
+                                print(msg)
+                                # Send data to all 
+                                for output in self.outputs:
+                                    send(output, msg)
 
+                        else:  
+                            addrLeft, nameLeft = self.get_client_name(sock)
+                            print(f'Chat server: {sock.fileno()} - {nameLeft} hung up')
                             self.clients -= 1
                             sock.close()
                             inputs.remove(sock)
                             self.outputs.remove(sock)
 
-                            # Sending client leaving information to others
-                            msg = f'\n(Now hung up: Client from {self.get_client_name(sock)})'
+                            # Remove client lists
+                            del self.listOfAllClients[(addrLeft[0],addrLeft[1],nameLeft)]
+                            del self.clientGroupHost[(addrLeft[0],addrLeft[1],nameLeft)]
+                            clientLeft = self.clientSockets[(addrLeft[0], addrLeft[1], nameLeft)]
+                            del self.clientmap[clientLeft]
+                            del self.clientSockets[addrLeft[0],addrLeft[1],nameLeft]
 
-                            for output in self.outputs:
-                                send(output, msg)
+
+                            
+                            # msg = f'\n(Now hung up: Client from {addrLeft,name})'
+
+                            # for output in self.outputs:
+                            #     send(output, msg)
                     except socket.error as e:
                         # Remove
                         inputs.remove(sock)
                         self.outputs.remove(sock)
+                        # Remove client lists
+                        addrLeft, nameLeft = self.get_client_name(sock)
+                        del self.listOfAllClients[(addrLeft[0],addrLeft[1],nameLeft)]
+                        del self.clientGroupHost[(addrLeft[0],addrLeft[1],nameLeft)]
+                        clientLeft = self.clientSockets[(addrLeft[0], addrLeft[1], nameLeft)]
+                        del self.clientmap[clientLeft]
+                        del self.clientSockets[addrLeft[0],addrLeft[1],nameLeft]
+        
+            
                         
         self.server.close()
 
