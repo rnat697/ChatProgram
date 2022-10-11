@@ -6,7 +6,7 @@ import sys
 
 from frontEnd.MessagesThread import MessagesThread
 class OneToOneChatMenu(QWidget):
-    closed = pyqtSignal()
+    closed = pyqtSignal() # For chat Connected to know if window is closed, modified from https://stackoverflow.com/a/67519553
     def __init__(self,client,clientDetails, targetDetails):
         super().__init__()
         self.client = client
@@ -22,10 +22,9 @@ class OneToOneChatMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('One To One Chat')
-        self.setGeometry(300, 300, 500, 500)  # (x,x,horizontal,vertical)
+        self.setGeometry(300, 300, 500, 500) 
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)
- 
 
         chatWithName = "Chat with " + self.targetName
 
@@ -54,6 +53,7 @@ class OneToOneChatMenu(QWidget):
         grid.addWidget(self.btnSendImg,2,4)
         grid.addWidget(self.btnExit,3,0,1,5)
 
+    # connecting actions to widget events
     def connectActions(self):
         self.btnExit.clicked.connect(self.exitApplication)
         self.btnSendMsg.clicked.connect(self.sendMessageAction)
@@ -61,9 +61,8 @@ class OneToOneChatMenu(QWidget):
     
     def sendMessageAction(self):
         msg = self.leMessageBox.text()
-        self.leMessageBox.clear()
-        print("MESSAGE IN BOX: ", msg)
-        self.client.sendData(msg) 
+        self.leMessageBox.clear() # clear line edit
+        self.client.sendData(msg) # send to server
     
     def exitApplication(self):
         self.msgThread.stopThread()
@@ -75,12 +74,12 @@ class OneToOneChatMenu(QWidget):
         self.runMessagesThread()
     
     def showMessages(self,msg):
-        print("Message recieved: ", msg)
-        self.teMessages.append(msg)
+        self.teMessages.append(msg) # show messages on textedit 
         
     def closeEvent(self, event):
         self.closed.emit()
     
+    # Thread to receive messages from participants
     def runMessagesThread(self):
         self.msgThread = MessagesThread(self.client)
         self.msgThread.message.connect(self.showMessages)

@@ -19,15 +19,14 @@ class GroupAndClientsThread(QThread):
         prevLengthClients = 0
         prevLengthGroups = 0
         while (self.scanSocket):
-            print("Pause: ",self.pause)
-            if(not self.pause):
+            if(not self.pause): # Checks if thread is paused
                 sleep(0.5) # For some reason this allows the server to know that the client hung up when we press exit button on Chat connected window
                 try:
                     self.client.sendData(2) # Request server for client names and group names
                     data = self.client.getData() # get the requested data
                 except:
                     break
-                print("client thread datatype: ", type(data))
+
                 if(type(data) == list): # check if the data sent is a list
                     # check if list of clients has been changed
                     if((prevLengthClients < len(data[0])) or (prevLengthClients > len(data[0])) ): 

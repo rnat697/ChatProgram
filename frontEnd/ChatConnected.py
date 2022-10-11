@@ -141,7 +141,7 @@ class ChatConnectedMenu(QWidget):
     
     def exitApplication(self):
         self.threadClients.quit()
-        self.client.cleanup()
+        self.client.cleanup() # close client socket
         self.close()
     
     def connectToOneToOneChat(self):
@@ -155,6 +155,7 @@ class ChatConnectedMenu(QWidget):
            
     
     def unpauseThread(self): # Unpause thread when oneToOne chat is closed
+        # Modified from https://stackoverflow.com/a/67519553
         self.threadClients.restart()
 
     def display(self):

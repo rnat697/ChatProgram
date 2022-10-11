@@ -114,7 +114,7 @@ class ChatServer(object):
                             else: 
                                 # Sending a message
                                 add, clientName = self.get_client_name(sock)
-                                msg = "["+ clientName + "]>> " + data
+                                msg = "["+ clientName + "]: " + data
                                 print(msg)
                                 # Send data to all 
                                 for output in self.outputs:
