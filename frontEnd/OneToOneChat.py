@@ -6,6 +6,7 @@ import sys
 
 from frontEnd.MessagesThread import MessagesThread
 class OneToOneChatMenu(QWidget):
+    closed = pyqtSignal()
     def __init__(self,client,clientDetails, targetDetails):
         super().__init__()
         self.client = client
@@ -18,9 +19,6 @@ class OneToOneChatMenu(QWidget):
         self.display()
         self.connectActions()
 
-
-
-    
     def initUI(self):
         #main window size and title
         self.setWindowTitle('One To One Chat')
@@ -68,6 +66,7 @@ class OneToOneChatMenu(QWidget):
         self.client.sendData(msg) 
     
     def exitApplication(self):
+        self.msgThread.stopThread()
         self.msgThread.quit()
         self.close()
 
@@ -79,7 +78,8 @@ class OneToOneChatMenu(QWidget):
         print("Message recieved: ", msg)
         self.teMessages.append(msg)
         
-
+    def closeEvent(self, event):
+        self.closed.emit()
     
     def runMessagesThread(self):
         self.msgThread = MessagesThread(self.client)

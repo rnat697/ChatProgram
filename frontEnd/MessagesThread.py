@@ -9,27 +9,26 @@ class MessagesThread(QThread):
         super().__init__()
         self.scanSocket = True
         self.client = client
+        self.stop = False
 
 
     def run(self):
         while (self.scanSocket):
-            sleep(0.5)
-            try:
-                data = self.client.getData()
-            except:
-                break
-            
-            print("MESSAGE from thread: ", data)
-            print("message type: ", type(data))
+            if(not self.stop):
+                sleep(0.3)
+                try:
+                    data = self.client.getData()
+                except:
+                    break
 
-            if (type(data) == str):
-                #print("MESSAGE from thread: ", data)
-                print("emitting data")
-                self.message.emit(data)
+                if (type(data) == str):
+                    print(data)
+                    self.message.emit(data)
         print("Finished msg thread")
     
-    def stop(self):
-        self.scanSocket = False
+    def stopThread(self):
+        self.terminate()
+
 
     def restart(self):
         self.scanSocket = True

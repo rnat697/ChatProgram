@@ -151,10 +151,10 @@ class ChatConnectedMenu(QWidget):
             targetDetails = self.clientInfoList[self.blockNumClient]
             clientDetails = self.clientInfoList[self.clientIndex]
             self.oneToOneChat = OneToOneChatMenu(self.client, clientDetails, targetDetails)
-            self.oneToOneChat.destroyed.connect(self.unpauseThread)
+            self.oneToOneChat.closed.connect(self.unpauseThread) # Using signal in OneToChatMenu, check if closed signal has been emitted
            
     
-    def unpauseThread(self):
+    def unpauseThread(self): # Unpause thread when oneToOne chat is closed
         self.threadClients.restart()
 
     def display(self):

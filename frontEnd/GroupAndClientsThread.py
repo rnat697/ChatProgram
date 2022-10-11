@@ -19,6 +19,7 @@ class GroupAndClientsThread(QThread):
         prevLengthClients = 0
         prevLengthGroups = 0
         while (self.scanSocket):
+            print("Pause: ",self.pause)
             if(not self.pause):
                 sleep(0.5) # For some reason this allows the server to know that the client hung up when we press exit button on Chat connected window
                 try:
@@ -39,6 +40,8 @@ class GroupAndClientsThread(QThread):
                         prevLengthGroups = len(data[1]) # update length
                         # Emit group names
                         self.groupNames.emit(data[1])
+            else:
+                sleep(1)
             
         
         print("Finished client thread")
