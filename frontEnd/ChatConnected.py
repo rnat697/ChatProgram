@@ -34,7 +34,7 @@ class ChatConnectedMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('Chat Connected')
-        self.setGeometry(300, 300, 400, 500)  # (x,x,horizontal,vertical)
+        self.setGeometry(800, 300, 400, 500)  # (x,x,horizontal,vertical)
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)
         self.highlightLine= False

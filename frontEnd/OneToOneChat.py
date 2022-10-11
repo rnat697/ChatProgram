@@ -22,7 +22,7 @@ class OneToOneChatMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('One To One Chat')
-        self.setGeometry(300, 300, 500, 500) 
+        self.setGeometry(800, 300, 500, 500) 
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)
 
@@ -57,6 +57,7 @@ class OneToOneChatMenu(QWidget):
     def connectActions(self):
         self.btnExit.clicked.connect(self.exitApplication)
         self.btnSendMsg.clicked.connect(self.sendMessageAction)
+        #SEND IMAGE BUTTON
 
     
     def sendMessageAction(self):

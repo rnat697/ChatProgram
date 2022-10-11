@@ -17,7 +17,7 @@ class ChatConnectionMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('Connect To Chat')
-        self.setGeometry(300, 300, 450, 330)  # (x,x,horizontal,vertical)
+        self.setGeometry(800, 300, 450, 330)  # (x,x,horizontal,vertical)
         self.setMinimumHeight(200)
         self.setMinimumWidth(300)
 
@@ -46,6 +46,10 @@ class ChatConnectionMenu(QWidget):
         grid.addWidget(self.nicknameLineEdit, 2, 1)
         grid.addWidget(self.connectBtn,4,2)
         grid.addWidget(self.exitBtn,4,3)
+        
+        # error dialogue for incorrect port number or address
+        self.error_dialog = QErrorMessage()
+
     
 
     def connectToServer(self):
@@ -54,12 +58,12 @@ class ChatConnectionMenu(QWidget):
         port = self.portLineEdit.text()
 
         if (address and name and port): # check if line edits are not empty
-            print(address,name,port)
-            self.client = ChatClient(name,port,address)
-            self.connectionMenu = ChatConnectedMenu(self.client,name)
-        #connectionMenu.display()
-        #client.run()
-
+            if(address != "localhost" or port != "9988"):
+                self.error_dialog.showMessage('Incorrect address or port. Correct address and port format - Address: localhost  Port: 9988')
+            else:
+                print(address,name,port)
+                self.client = ChatClient(name,port,address)
+                self.connectionMenu = ChatConnectedMenu(self.client,name)
 
     def connectActions(self):
         self.exitBtn.clicked.connect(QCoreApplication.instance().quit)
