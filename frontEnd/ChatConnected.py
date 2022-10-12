@@ -22,8 +22,6 @@ class ChatConnectedMenu(QWidget):
         self.clientIndex = -1
         self.blockNumGroup = -1
 
-        # self.setFocus()
-        # qApp.focusChanged.connect(self.onFocusChanged)
 
         self.initUI()
         self.display()
@@ -37,7 +35,8 @@ class ChatConnectedMenu(QWidget):
         self.setMinimumWidth(200)
         self.highlightLine= False
         self.updateClientInfo = True
-        # Labels for connected clients and chat rooms
+
+        # Labels for connected clients and group chats
         self.clientsLabel = QLabel('Connected Clients', self)
         self.groupChatsLabel = QLabel('Group Chats', self)
 
@@ -123,19 +122,18 @@ class ChatConnectedMenu(QWidget):
         self.btnOneToOne.clicked.connect(self.connectToOneToOneChat)
         self.tbClients.cursorPositionChanged.connect(self.onTextBrowserClientCursorPosChanged)
         self.tbGroupChats.cursorPositionChanged.connect(self.onTextBrowserGroupCursorPosChanged)
-        # to add btnCreateGroupChat, btnJoinGroup, btnOneToOne
     
     def createGroup(self):
         self.client.sendData(3) # tells server that we want to create a group
     
     def joinGroup(self):
-        if(self.blockNumGroup != -1):
+        if(self.blockNumGroup != -1): # check if user has clicked on a group chat
+            # find corresponding information needed to use group chat
             groupName = self.groupNameList[self.blockNumGroup]
             groupMembers = self.groupsMemberList[self.blockNumGroup]
             clientInfo = self.clientInfoList[self.clientIndex]
             clientExists = False
             groupHost = groupMembers[0][2]
-            print("HOST: ",groupHost)
 
             # Check if client is a member of the group chat
             for member in groupMembers:
@@ -161,6 +159,8 @@ class ChatConnectedMenu(QWidget):
             self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
     
     def checkMemberListUpdate(self, isUpdated):
+        # checks if member lists in group chats are changed. This is mostly used when users are new to the group chat
+        # to check if the member list has been updated
         if(isUpdated):
             self.memberListUpdated = True
         else:
@@ -174,7 +174,7 @@ class ChatConnectedMenu(QWidget):
     
     def connectToOneToOneChat(self):
         if((self.blockNumClient != -1) and (self.blockNumClient != self.clientIndex)):
-            self.threadClients.pauseThread() # pauses the thread for getting group and clients info
+            self.threadClients.pauseThread() # pauses the thread for getting group and clients info in order to not hog the server while messaging chats are running
             
             # find corresponding participant name and details
             targetDetails = self.clientInfoList[self.blockNumClient]
@@ -222,7 +222,7 @@ class ChatConnectedMenu(QWidget):
         self.groupsMemberList.clear()
         for items in info.keys():
             print("from group: ", items)
-            if(not items): # if empty
+            if(not items): # Dont add anything if its empty
                 break
             else:
                 groupName = items[0]
@@ -230,6 +230,7 @@ class ChatConnectedMenu(QWidget):
                 print("GROUP NAME: ", groupName)
                 self.tbGroupChats.append(groupName)
         
+        # update member list where an element of the list contains the corresponding members for the group
         for members in info.values():
             print("MEMBERS: ", members)  
             self.groupsMemberList.append(members)   
@@ -252,6 +253,7 @@ class ChatConnectedMenu(QWidget):
 
 
     def runGroupNClientsThread(self):
+        # Runs the thread for getting groups and clients information from the server
         self.threadClients = GroupAndClientsThread(self.client)
         self.threadClients.clientNames.connect(self.showClientInfo)
         self.threadClients.groupNames.connect(self.showGroupsInfo)
