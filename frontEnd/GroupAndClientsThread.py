@@ -1,7 +1,5 @@
-import string
 from PyQt5.QtCore import QThread, pyqtSignal, QObject, pyqtSlot
 from time import sleep
-import socket
 
 class GroupAndClientsThread(QThread):
     clientNames = pyqtSignal(dict) 
@@ -22,7 +20,7 @@ class GroupAndClientsThread(QThread):
         prevlengthofMembers = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] 
         while (self.scanSocket):
             if(not self.pause): # Checks if thread is paused
-                sleep(0.5) # For some reason this allows the server to know that the client hung up when we press exit button on Chat connected window
+                sleep(0.5) # For some reason this allows the server to know that the client hang up when we press exit button on Chat connected window
                 try:
                     self.client.sendData(2) # Request server for client names and group names
                     data = self.client.getData() # get the requested data

@@ -64,7 +64,7 @@ class OneToOneChatMenu(QWidget):
     def sendMessageAction(self):
         msg = self.leMessageBox.text()
         self.leMessageBox.clear() # clear line edit
-        self.client.sendData([1,self.participants,msg]) # send to server
+        self.client.sendData([1,self.participants,msg]) # Send participants and message to server to send to other clients
     
     def exitApplication(self):
         self.msgThread.stopThread()
