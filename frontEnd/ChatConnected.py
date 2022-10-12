@@ -21,6 +21,7 @@ class ChatConnectedMenu(QWidget):
         self.blockNumClient = -1
         self.clientIndex = -1
         self.blockNumGroup = -1
+        self.receivedInviteMsg = ""
 
 
         self.initUI()
@@ -155,8 +156,32 @@ class ChatConnectedMenu(QWidget):
             groupMembers = self.groupsMemberList[self.blockNumGroup] # list of members should be updated
             self.threadClients.pauseThread() # pauses the thread for getting group and clients info
             print("connecting to group chat")
-            self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName)
+            self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName,self.clientInfoList)
             self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
+        
+        elif(self.receivedInviteMsg):
+            print("initialising data from invite")
+            groupName = self.receivedInviteMsg.split("//")[1]
+            index = self.groupNameList.index(groupName)
+            groupMembers = self.groupsMemberList[index]
+            clientInfo = self.clientInfoList[self.clientIndex]
+
+            groupHost = groupMembers[0][2]
+            self.client.sendData([2,groupName,clientInfo,groupHost])
+            print("membership requested")
+            # Wait until server sends back the updated members list
+            while(True):
+                if(self.memberListUpdated):
+                    print("memberlist updated?")
+                    break
+
+             # connect to group chat
+            groupMembers = self.groupsMemberList[index] # list of members should be updated
+            self.threadClients.pauseThread() # pauses the thread for getting group and clients info
+            print("connecting to group chat")
+            self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName,self.clientInfoList)
+            self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
+
     
     def checkMemberListUpdate(self, isUpdated):
         # checks if member lists in group chats are changed. This is mostly used when users are new to the group chat
@@ -238,9 +263,10 @@ class ChatConnectedMenu(QWidget):
 
     def showInviteDialog(self,msg):
         print("dialogue")
+        self.receivedInviteMsg = msg
         # creates and opens the dialog saying user has been invited to group and asks if they want to join
         invite = QMessageBox()
-        invite.setIcon(QMessageBox.question)
+        invite.setIcon(QMessageBox.Question)
         invite.setText(msg)
         invite.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         invite.buttonClicked.connect(self.inviteDialogBtnsClick)
@@ -248,7 +274,9 @@ class ChatConnectedMenu(QWidget):
         showInvite = invite.exec_()
 
     def inviteDialogBtnsClick(self, i):
-        if(i.text() == "Yes"): # if user wants to join run join group function
+        print(i.text())
+        if(i.text() == "&Yes"): # if user wants to join run join group function
+            print("calling join group")
             self.joinGroup()
 
 

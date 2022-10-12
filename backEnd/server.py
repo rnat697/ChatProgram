@@ -177,16 +177,16 @@ class ChatServer(object):
                                     for member in members:
                                         print(member)
                                         clientSoc = self.clientSockets[member]
-                                        send(clientSoc,[2,members])
+                                        send(clientSoc,[2,members]) 
                                 
                                 if(data[0] == 3): # sending invite to person
-                                    inviteReceivers = data[1]
+                                    inviteReceiver = data[1]
                                     groupName = data[2]
-                                    inviteMsg = "You're invited to join " + groupName + ". Would you like to join?"
+                                    inviteMsg = "You're invited to join //" + groupName + "// , would you like to join?"
 
-                                    for receiver in inviteReceivers:
-                                        receivSocket = self.clientSockets[receiver]
-                                        send(receivSocket,[1,inviteMsg])
+                                    
+                                    receivSocket = self.clientSockets[inviteReceiver]
+                                    send(receivSocket,[1,inviteMsg])
                                     
 
 

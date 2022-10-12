@@ -4,10 +4,11 @@ from PyQt5.QtGui import *
 
 import sys
 from frontEnd.GroupMessagesThread import GroupMessagesThread
+from frontEnd.Invite import InviteMenu
 
 class GroupChatMenu(QWidget):
-    closed = pyqtSignal() # For chat Connected to know if window is closed, modified from https://stackoverflow.com/a/67519553
-    def __init__(self,client,clientDetails,memberList,groupName):
+    closed = pyqtSignal() # For Chat Connected Menu to know if window is closed, modified from https://stackoverflow.com/a/67519553
+    def __init__(self,client,clientDetails,memberList,groupName, allClients):
         super().__init__()
         self.client = client
         self.clientDetails = clientDetails
@@ -15,6 +16,7 @@ class GroupChatMenu(QWidget):
         self.groupName = groupName
         self.clientName = self.clientDetails[2]
         self.hostName = self.memberList[0][2]
+        self.allClients = allClients
 
         self.initUI()
         self.initMemberBox()
@@ -72,7 +74,14 @@ class GroupChatMenu(QWidget):
         self.btnInvite.clicked.connect(self.showInviteMenu)
 
     def showInviteMenu(self):
-        print("invite")
+        #self.groupMsgThread.pauseThread()
+        self.inviteMenu = InviteMenu(self.client,self.memberList,self.groupName,self.allClients)
+        #self.inviteMenu.inviteThreadFinished.connect(self.unpauseGroupThread)
+        #print("Group Thread paused")
+    
+    # def unpauseGroupThread(self):
+    #     print("Group Thread unpaused")
+    #     self.groupMsgThread.unpauseThread()
     
     def sendMessageAction(self):
         msg = self.leMessageBoxGroup.text()
@@ -112,7 +121,7 @@ class GroupChatMenu(QWidget):
                 name += " (Host)"
             elif(name == self.clientName):
                 name += " (Me)"
-                
+
             self.tbMembers.append(name)
 
 

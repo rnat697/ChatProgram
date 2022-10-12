@@ -8,11 +8,13 @@ class GroupMessagesThread(QThread):
     def __init__(self,client):
         super().__init__()
         self.scanSocket = True
+        self.pause = False
         self.client = client
 
 
     def run(self):
         while (self.scanSocket):
+            #if(not self.pause):
             sleep(0.3)
             try:
                 data = self.client.getData()
@@ -29,12 +31,17 @@ class GroupMessagesThread(QThread):
                 if(data[0] == 2):
                     self.members.emit(data[1])
                     print("group members updated")
+            # else:
+            #     sleep(1)    
+            
 
         print("Finished group msg thread")
     
     def stopThread(self):
         self.terminate()
 
+    def pauseThread(self):
+        self.pause = True
 
-    def restart(self):
-        self.scanSocket = True
+    def unpauseThread(self):
+        self.pause = False
