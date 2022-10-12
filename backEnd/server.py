@@ -142,7 +142,7 @@ class ChatServer(object):
                                     add, hostName = self.get_client_name(sock)
                                     groupName = "Group Chat " + str(self.numGroups) + " by " + hostName
                                     print(groupName, "is made")
-                                    host  = [add[0],add[1], hostName]
+                                    host  = (add[0],add[1], hostName)
                                     self.clientGroupHost[(add[0], add[1], hostName)] =  [groupName]
                                     self.groups[(groupName,hostName)] = [host]
 
@@ -162,23 +162,31 @@ class ChatServer(object):
                                         send(clientSocket, msg)
                                 
                                 if (data[0] == 2): # joining or invite accepted to group
+                                    print("Joining Group via server")
                                     groupName  = data[1]
                                     clientsJoining = data[2]
                                     groupHostName = data[3]
                                     members = self.groups[(groupName,groupHostName)]
-
-                                    for clientInfo in clientsJoining: # add joining and invited clients to the group
-                                        members.append(clientInfo)
+                                    print(clientsJoining)
+                                    
+                                    # add joining and invited clients to the group
+                                    members.append(clientsJoining)
                                     print(members)
+                                    
+                                    # send updated member to clients
+                                    for member in members:
+                                        print(member)
+                                        clientSoc = self.clientSockets[member]
+                                        send(clientSoc,[2,members])
                                 
                                 if(data[0] == 3): # sending invite to person
                                     inviteReceivers = data[1]
                                     groupName = data[2]
-                                    inviteMsg = "You're invited to join " + groupName
+                                    inviteMsg = "You're invited to join " + groupName + ". Would you like to join?"
 
                                     for receiver in inviteReceivers:
                                         receivSocket = self.clientSockets[receiver]
-                                        send(receivSocket,inviteMsg)
+                                        send(receivSocket,[1,inviteMsg])
                                     
 
 
