@@ -14,6 +14,7 @@ class OneToOneChatMenu(QWidget):
         self.targetDetails = targetDetails
         self.targetName = self.targetDetails[2]
         self.clientName = self.clientDetails[2]
+        self.participants = [self.clientDetails, self.targetDetails]
 
         self.initUI()
         self.display()
@@ -63,7 +64,7 @@ class OneToOneChatMenu(QWidget):
     def sendMessageAction(self):
         msg = self.leMessageBox.text()
         self.leMessageBox.clear() # clear line edit
-        self.client.sendData(msg) # send to server
+        self.client.sendData([1,self.participants,msg]) # send to server
     
     def exitApplication(self):
         self.msgThread.stopThread()

@@ -1,3 +1,4 @@
+from http import client
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -9,7 +10,7 @@ from PyQt5.QtCore import QThread, pyqtSignal, QObject
 
 from frontEnd.GroupAndClientsThread import GroupAndClientsThread
 from frontEnd.OneToOneChat import OneToOneChatMenu
-
+from time import sleep
 
 
 
@@ -19,7 +20,8 @@ class ChatConnectedMenu(QWidget):
         self.client = client
         self.clientName = clientName
         self.clientInfoList = []
-        self.groupInfoList = []
+        self.groupNameList = []
+        self.groupsMemberList = []
         self.blockNumClient = -1
         self.clientIndex = -1
         self.blockNumGroup = -1
@@ -66,20 +68,6 @@ class ChatConnectedMenu(QWidget):
         grid.addWidget(self.btnExit,5,1)
     
 
-    # @pyqtSlot("QWidget*", "QWidget*")
-    # # from https://stackoverflow.com/questions/56612873/how-to-capture-pyqt5-qmainwindow-losing-focus
-    # def onFocusChanged(self, old, now):
-    #     if now == None:
-    #         print(f"\nwindow is the active window: {self.isActiveWindow()}")
-
-            
-    #         # window lost focus
-    #         self.threadClients.pauseThread()
-            
-    #     else: 
-    #         print(f"window is the active window: {self.isActiveWindow()}")
-    #         self.threadClients.restart()
-
 
     def onTextBrowserClientCursorPosChanged(self):
         # from https://stackoverflow.com/questions/60139804/highlighting-lines-on-qtextedit-document
@@ -118,7 +106,7 @@ class ChatConnectedMenu(QWidget):
             self.fmt_normal.setBackground(QtGui.QColor('white'))
 
             cursorGroup = self.tbGroupChats.textCursor()
-            self.blockNumClient = cursorGroup.blockNumber() # save line number
+            self.blockNumGroup = cursorGroup.blockNumber() # save line number
             print("block number Group: " + str(self.blockNumGroup) ) 
             
             # Resets the highlight colour to white for all lines
@@ -126,7 +114,7 @@ class ChatConnectedMenu(QWidget):
             cursorGroup.setBlockFormat(self.fmt_normal)
 
             # Create new cursor so that it only highlights the line that has been clicked
-            cursor = QTextCursor(self.tbGroupChats.document().findBlockByNumber(self.blockNumClient))
+            cursor = QTextCursor(self.tbGroupChats.document().findBlockByNumber(self.blockNumGroup))
             cursor.setBlockFormat(self.fmt)
         else:
             self.blockNumGroup = -1
@@ -137,8 +125,35 @@ class ChatConnectedMenu(QWidget):
         self.tbClients.cursorPositionChanged.connect(self.onTextBrowserClientCursorPosChanged)
         self.btnOneToOne.clicked.connect(self.connectToOneToOneChat)
         self.tbGroupChats.cursorPositionChanged.connect(self.onTextBrowserGroupCursorPosChanged)
+        self.btnCreateGroup.clicked.connect(self.createGroup)
+        self.btnJoinGroup.clicked.connect(self.joinGroup)
         # to add btnCreateGroupChat, btnJoinGroup, btnOneToOne
     
+    def createGroup(self):
+        self.client.sendData(3) # tells server that we want to create a group
+    
+    def joinGroup(self):
+        groupName = self.groupNameList[self.blockNumGroup]
+        groupMembers = self.groupsMemberList[self.blockNumGroup]
+        clientInfo = self.clientInfoList[self.clientIndex]
+        clientExists = False
+        groupHost = groupMembers[0][2]
+        print("HOST: ",groupHost)
+        # Check if client is a member of the group chat
+        for member in groupMembers:
+            if(member[0] ==  clientInfo[0] and member[1] == clientInfo[1] and member[2] == clientInfo[2]):
+                clientExists = True
+                break
+        
+        # if client is not a member of the chat, send membership request to server
+        if(not clientExists):
+            self.client.sendData([2,groupName,clientInfo,groupHost])
+            print("membership requested")
+            sleep(0.8)
+        # connect to group chat
+        print("connecting to chat")
+
+
     def exitApplication(self):
         self.threadClients.quit()
         self.client.cleanup() # close client socket
@@ -188,17 +203,23 @@ class ChatConnectedMenu(QWidget):
         # Goes through the group dictionary and adds the name of the groups to the text browser
         self.updateGroupInfo = True
         self.tbGroupChats.clear() # clears it first to avoid duplications
-        self.groupInfoList.clear()
-        for items in info.values():
+        self.groupNameList.clear()
+        self.groupsMemberList.clear()
+        for items in info.keys():
             print("from group: ", items)
             if(not items): # if empty
                 break
             else:
-                self.groupInfoList.append(items)
-                groupName = items[1]
+                groupName = items[0]
+                self.groupNameList.append(groupName)
                 print("GROUP NAME: ", groupName)
                 self.tbGroupChats.append(groupName)
+        
+        for members in info.values():
+            print("MEMBERS: ", members)  
+            self.groupsMemberList.append(members)   
         self.updateGroupInfo = False
+
 
     def runGroupNClientsThread(self):
         self.threadClients = GroupAndClientsThread(self.client)

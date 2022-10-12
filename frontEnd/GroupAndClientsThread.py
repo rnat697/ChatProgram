@@ -8,6 +8,7 @@ class GroupAndClientsThread(QThread):
     groupNames = pyqtSignal(dict)
     finished = pyqtSignal()
 
+
     def __init__(self,client):
         super().__init__()
         self.scanSocket = True
@@ -18,6 +19,7 @@ class GroupAndClientsThread(QThread):
     def run(self):
         prevLengthClients = 0
         prevLengthGroups = 0
+        prevlengthofMembers = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] 
         while (self.scanSocket):
             if(not self.pause): # Checks if thread is paused
                 sleep(0.5) # For some reason this allows the server to know that the client hung up when we press exit button on Chat connected window
@@ -37,8 +39,17 @@ class GroupAndClientsThread(QThread):
                     # check if list of groups has been changed
                     if((prevLengthGroups < len(data[1])) or (prevLengthGroups > len(data[1]))):
                         prevLengthGroups = len(data[1]) # update length
-                        # Emit group names
+                        # Emit group information
                         self.groupNames.emit(data[1])
+
+                    # Check if list of members has changed
+                    index = 0
+                    for members in data[1].values():
+                        if (prevlengthofMembers[index] < len(members) or prevlengthofMembers[index] > len(members)):
+                            prevlengthofMembers[index] = len(members)
+                            self.groupNames.emit(data[1])
+                            break
+                        index+=1
             else:
                 sleep(1)
             
