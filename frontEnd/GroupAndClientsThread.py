@@ -4,7 +4,9 @@ from time import sleep
 class GroupAndClientsThread(QThread):
     clientNames = pyqtSignal(dict) 
     groupNames = pyqtSignal(dict)
-    finished = pyqtSignal()
+    groupMembersUpdated = pyqtSignal(bool)
+    inviteMsg = pyqtSignal(str) 
+
 
 
     def __init__(self,client):
@@ -28,32 +30,43 @@ class GroupAndClientsThread(QThread):
                     break
 
                 if(type(data) == list): # check if the data sent is a list
-                    # check if list of clients has been changed
-                    if((prevLengthClients < len(data[0])) or (prevLengthClients > len(data[0])) ): 
-                        prevLengthClients = len(data[0]) # update length
-                        # Emit client names
-                        self.clientNames.emit(data[0])
+                    
+                    # Check if an invite has been received
+                    if(data[0] == 1):
+                        msg = data[1]
+                        print(msg)
+                        self.inviteMsg.emit(msg)
 
-                    # check if list of groups has been changed
-                    if((prevLengthGroups < len(data[1])) or (prevLengthGroups > len(data[1]))):
-                        prevLengthGroups = len(data[1]) # update length
-                        # Emit group information
-                        self.groupNames.emit(data[1])
+                    # check if data at position 0 is a dictionary which means server sent the list of clients and groups
+                    if(type(data[0]) == dict):
+                        # check if list of clients has been changed
+                        if((prevLengthClients < len(data[0])) or (prevLengthClients > len(data[0])) ): 
+                            prevLengthClients = len(data[0]) # update length
+                            # Emit client names
+                            self.clientNames.emit(data[0])
 
-                    # Check if list of members has changed
-                    index = 0
-                    for members in data[1].values():
-                        if (prevlengthofMembers[index] < len(members) or prevlengthofMembers[index] > len(members)):
-                            prevlengthofMembers[index] = len(members)
+                        # check if list of groups has been changed
+                        if((prevLengthGroups < len(data[1])) or (prevLengthGroups > len(data[1]))):
+                            prevLengthGroups = len(data[1]) # update length
+                            # Emit group information
                             self.groupNames.emit(data[1])
-                            break
-                        index+=1
+
+                        # Check if list of members has changed
+                        index = 0
+                        for members in data[1].values():
+                            if (prevlengthofMembers[index] < len(members) or prevlengthofMembers[index] > len(members)):
+                                prevlengthofMembers[index] = len(members)
+                                self.groupNames.emit(data[1])
+                                self.groupMembersUpdated.emit(True)
+                                break
+                            elif(index == len(data[1].values())-1):
+                                self.groupMembersUpdated.emit(False)
+                            index+=1
             else:
                 sleep(1)
             
         
         print("Finished client thread")
-        self.finished.emit()
 
     def stop(self):
         print("stopping thread")

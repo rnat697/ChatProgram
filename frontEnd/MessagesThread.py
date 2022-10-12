@@ -1,4 +1,3 @@
-from email import message
 from PyQt5.QtCore import QThread, pyqtSignal
 from time import sleep
 

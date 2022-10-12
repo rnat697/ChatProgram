@@ -3,15 +3,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
-import sys
-import threading
-from backEnd.client import ChatClient
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 
 from frontEnd.GroupAndClientsThread import GroupAndClientsThread
 from frontEnd.OneToOneChat import OneToOneChatMenu
-from time import sleep
-
+from frontEnd.GroupChat import GroupChatMenu
 
 
 class ChatConnectedMenu(QWidget):
@@ -122,36 +118,53 @@ class ChatConnectedMenu(QWidget):
 
     def connectActions(self):
         self.btnExit.clicked.connect(self.exitApplication)
-        self.tbClients.cursorPositionChanged.connect(self.onTextBrowserClientCursorPosChanged)
-        self.btnOneToOne.clicked.connect(self.connectToOneToOneChat)
-        self.tbGroupChats.cursorPositionChanged.connect(self.onTextBrowserGroupCursorPosChanged)
         self.btnCreateGroup.clicked.connect(self.createGroup)
         self.btnJoinGroup.clicked.connect(self.joinGroup)
+        self.btnOneToOne.clicked.connect(self.connectToOneToOneChat)
+        self.tbClients.cursorPositionChanged.connect(self.onTextBrowserClientCursorPosChanged)
+        self.tbGroupChats.cursorPositionChanged.connect(self.onTextBrowserGroupCursorPosChanged)
         # to add btnCreateGroupChat, btnJoinGroup, btnOneToOne
     
     def createGroup(self):
         self.client.sendData(3) # tells server that we want to create a group
     
     def joinGroup(self):
-        groupName = self.groupNameList[self.blockNumGroup]
-        groupMembers = self.groupsMemberList[self.blockNumGroup]
-        clientInfo = self.clientInfoList[self.clientIndex]
-        clientExists = False
-        groupHost = groupMembers[0][2]
-        print("HOST: ",groupHost)
-        # Check if client is a member of the group chat
-        for member in groupMembers:
-            if(member[0] ==  clientInfo[0] and member[1] == clientInfo[1] and member[2] == clientInfo[2]):
-                clientExists = True
-                break
-        
-        # if client is not a member of the chat, send membership request to server
-        if(not clientExists):
-            self.client.sendData([2,groupName,clientInfo,groupHost])
-            print("membership requested")
-            sleep(0.8)
-        # connect to group chat
-        print("connecting to chat")
+        if(self.blockNumGroup != -1):
+            groupName = self.groupNameList[self.blockNumGroup]
+            groupMembers = self.groupsMemberList[self.blockNumGroup]
+            clientInfo = self.clientInfoList[self.clientIndex]
+            clientExists = False
+            groupHost = groupMembers[0][2]
+            print("HOST: ",groupHost)
+
+            # Check if client is a member of the group chat
+            for member in groupMembers:
+                if(member[0] ==  clientInfo[0] and member[1] == clientInfo[1] and member[2] == clientInfo[2]):
+                    clientExists = True
+                    break
+            
+            # if client is not a member of the chat, send membership request to server
+            if(not clientExists):
+                self.client.sendData([2,groupName,clientInfo,groupHost])
+                print("membership requested")
+                
+                # Wait until server sends back the updated members list
+                while(True):
+                    if(self.memberListUpdated):
+                        break
+
+            # connect to group chat
+            groupMembers = self.groupsMemberList[self.blockNumGroup] # list of members should be updated
+            self.threadClients.pauseThread() # pauses the thread for getting group and clients info
+            print("connecting to group chat")
+            self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName)
+            self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
+    
+    def checkMemberListUpdate(self, isUpdated):
+        if(isUpdated):
+            self.memberListUpdated = True
+        else:
+            self.memberlistUpdated = False
 
 
     def exitApplication(self):
@@ -161,7 +174,8 @@ class ChatConnectedMenu(QWidget):
     
     def connectToOneToOneChat(self):
         if((self.blockNumClient != -1) and (self.blockNumClient != self.clientIndex)):
-            self.threadClients.pauseThread()
+            self.threadClients.pauseThread() # pauses the thread for getting group and clients info
+            
             # find corresponding participant name and details
             targetDetails = self.clientInfoList[self.blockNumClient]
             clientDetails = self.clientInfoList[self.clientIndex]
@@ -176,6 +190,7 @@ class ChatConnectedMenu(QWidget):
     def display(self):
         self.show()
         self.runGroupNClientsThread()
+
 
     def showClientInfo(self, info):
         # Goes through the client dictionary and adds the name of the clients to the text browser
@@ -220,12 +235,30 @@ class ChatConnectedMenu(QWidget):
             self.groupsMemberList.append(members)   
         self.updateGroupInfo = False
 
+    def showInviteDialog(self,msg):
+        print("dialogue")
+        # creates and opens the dialog saying user has been invited to group and asks if they want to join
+        invite = QMessageBox()
+        invite.setIcon(QMessageBox.question)
+        invite.setText(msg)
+        invite.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        invite.buttonClicked.connect(self.inviteDialogBtnsClick)
+
+        showInvite = invite.exec_()
+
+    def inviteDialogBtnsClick(self, i):
+        if(i.text() == "Yes"): # if user wants to join run join group function
+            self.joinGroup()
+
 
     def runGroupNClientsThread(self):
         self.threadClients = GroupAndClientsThread(self.client)
         self.threadClients.clientNames.connect(self.showClientInfo)
         self.threadClients.groupNames.connect(self.showGroupsInfo)
+        self.threadClients.inviteMsg.connect(self.showInviteDialog)
+        self.threadClients.groupMembersUpdated.connect(self.checkMemberListUpdate)
         self.threadClients.start()
+    
 
 # delete later
 # if __name__ == '__main__':
