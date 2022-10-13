@@ -1,8 +1,7 @@
 import select
 import socket
 import sys
-import signal
-import threading
+import ssl
 
 from backEnd.utils import *
 
@@ -26,12 +25,13 @@ class ChatClient():
         self.host = host
         self.port = int(port)
         
-        # Initial prompt
-        self.prompt = f'[{name}@{socket.gethostname()}]> '
+        # Encryption using TLSv1.2 
+        self.context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         
         # Connect to server at port
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock = self.context.wrap_socket(self.sock, server_hostname=host)
             self.sock.connect((host, self.port))
             print(f'Now connected to chat server@ port {self.port}')
             self.connected = True
@@ -39,15 +39,11 @@ class ChatClient():
             # Send my name...
             send(self.sock, 'NAME: ' + self.name)
             data = receive(self.sock)
-            print(data)
             # Contains client address, set it
             addr = data.split('CLIENT: ')[1][1:-1].split(", ")
             print(addr)
             self.address = addr[0]
             self.portAddr = int(addr[1])
-            #self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
-
-            #threading.Thread(target=get_and_send, args=(self,)).start()
 
         except socket.error as e:
             print(f'Failed to connect to chat server @ port {self.port}')
@@ -63,47 +59,8 @@ class ChatClient():
         for sock in readable:
             if sock == self.sock:
                 data = receive(self.sock)
-                # if not data:
-                #     print('Client shutting down.')
-                #     self.connected = False
-                #     break
-                # else:
                 return data
     
     def sendData(self,data):
         if data:
             send(self.sock, data)
-
-# might not need this
-    def run(self):
-        """ Chat client main loop """
-        while self.connected:
-            try:
-                #sys.stdout.write(self.prompt)
-                #sys.stdout.flush()
-
-                # Wait for input from stdin and socket
-                # readable, writeable, exceptional = select.select([0, self.sock], [], [])
-                readable, writeable, exceptional = select.select(
-                    [self.sock], [], [])
-
-                for sock in readable:
-                    # if sock == 0:
-                    #     data = sys.stdin.readline().strip()
-                    #     if data:
-                    #         send(self.sock, data)
-                    if sock == self.sock:
-                        data = receive(self.sock)
-                        if not data:
-                            print('Client shutting down.')
-                            self.connected = False
-                            break
-                        else:
-                            sys.stdout.write(data + '\n')
-                            sys.stdout.flush()
-
-            except KeyboardInterrupt:
-                print(" Client interrupted. " "")
-                stop_thread = True
-                self.cleanup()
-                break
