@@ -225,7 +225,6 @@ class ChatConnectedMenu(QWidget):
         i = 0
         if(len(info) >0):
             for items in info:
-                print("info: ", items)
                 self.clientInfoList.append(items) # add to list for 1:1 chat reference
                 name = items[2]
                 if(name == self.clientName):
@@ -246,7 +245,6 @@ class ChatConnectedMenu(QWidget):
         self.groupNameList.clear()
         self.groupsMemberList.clear()
         for items in info.keys():
-            print("from group: ", items)
             if(not items): # Dont add anything if its empty
                 break
             else:
@@ -257,7 +255,6 @@ class ChatConnectedMenu(QWidget):
         
         # update member list where an element of the list contains the corresponding members for the group
         for members in info.values():
-            print("MEMBERS: ", members)  
             self.groupsMemberList.append(members)   
         self.updateGroupInfo = False
 
@@ -276,7 +273,6 @@ class ChatConnectedMenu(QWidget):
     def inviteDialogBtnsClick(self, i):
         print(i.text())
         if(i.text() == "&Yes"): # if user wants to join run join group function
-            print("calling join group")
             self.joinGroup()
 
 

@@ -2,6 +2,7 @@ import select
 import socket
 import sys
 import ssl
+from socket import*
 
 from backEnd.utils import *
 
@@ -64,3 +65,6 @@ class ChatClient():
     def sendData(self,data):
         if data:
             send(self.sock, data)
+    def sendImageAll(self,data):
+        if(data):
+           self.sock.sendall(data)

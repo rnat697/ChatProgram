@@ -14,7 +14,6 @@ class GroupMessagesThread(QThread):
 
     def run(self):
         while (self.scanSocket):
-            #if(not self.pause):
             sleep(0.3)
             try:
                 data = self.client.getData()
@@ -31,11 +30,8 @@ class GroupMessagesThread(QThread):
                 if(data[0] == 2):
                     self.members.emit(data[1])
                     print("group members updated")
-            # else:
-            #     sleep(1)    
-            
 
-        print("Finished group msg thread")
+  
     
     def stopThread(self):
         self.terminate()

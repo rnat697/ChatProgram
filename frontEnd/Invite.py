@@ -2,14 +2,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-import sys
 
 class InviteMenu(QWidget):
     inviteThreadFinished = pyqtSignal()
     def __init__(self,client, memberList,groupName, allClients):
         super().__init__()
         self.client = client
-        #self.clientList = clientList #NVM USE CLIENT TO ASK FOR CLIENT LIST FROM SERVER
         self.memberList = memberList
         self.groupName = groupName
         self.nonMembers  = []
@@ -76,7 +74,6 @@ class InviteMenu(QWidget):
 
     def display(self):
         self.show()
-        #self.runAvailableClientsThread()
 
     def connectActions(self):
         self.btnCancel.clicked.connect(self.exitApplication)
@@ -110,6 +107,7 @@ class InviteMenu(QWidget):
     def inviteClients(self):
         if(self.blockNum != -1):
             receiver = self.nonMembers[self.blockNum]
+            print("Sending invite to: ",receiver)
             
             # format is 3 flag, receiver, groupName
             self.client.sendData([3,receiver,self.groupName])
@@ -118,21 +116,4 @@ class InviteMenu(QWidget):
     def exitApplication(self):
         self.close()
     
-    # def closeThread(self):
-    #     self.threadAvailClient.stopThread()
-    #     self.threadAvailClient.quit()
-    #     self.inviteThreadFinished.emit()
-
-    # def runAvailableClientsThread(self):
-    #     print("running thread for available clients")
-    #     self.threadAvailClient = AvailableClientsThread(self.client)
-    #     self.threadAvailClient.allClients.connect(self.initAvailClients)
-    #     self.threadAvailClient.finished.connect(self.closeThread)
-    #     self.threadAvailClient.start()
-
-# delete later
-# if __name__ == '__main__':
-#    app = QApplication(sys.argv)
-#    ex = InviteMenu()
-#    ex.display()
-#    sys.exit(app.exec_())
+   

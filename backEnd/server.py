@@ -3,7 +3,8 @@ import socket
 import sys
 import signal
 import ssl
-
+import os
+from socket import*
 from utils import *
 
 SERVER_HOST = 'localhost'
@@ -139,7 +140,7 @@ class ChatServer(object):
                             #         send(output, msg)
 
                             # To differentiate between client to client messages and thread requests
-                            if (type(data) == int): # backend requests
+                            if (type(data) == int): 
                                 if(data == 2): # when thread requests for list of all clients and groups
                                     send(sock, [self.listOfAllClients,self.groups])
                                 
@@ -152,8 +153,7 @@ class ChatServer(object):
                                     self.clientGroupHost[(add[0], add[1], hostName)] =  [groupName]
                                     self.groups[(groupName,hostName)] = [host]
 
-                                
-                                
+                            
                             else: 
                                 if data[0] == 1: # Sending a message
                                     add, clientName = self.get_client_name(sock)
@@ -190,10 +190,43 @@ class ChatServer(object):
                                     groupName = data[2]
                                     inviteMsg = "You're invited to join //" + groupName + "// , would you like to join?"
 
-                                    
                                     receivSocket = self.clientSockets[inviteReceiver]
                                     send(receivSocket,[1,inviteMsg])
-                                    
+                                
+                                if(data[0] == 4): # receiving image and downloading it to server folder
+                                    print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                                    fileName = data[1]
+                                    receiversClients = data[2]
+                                    fileSize = data[3]
+                                    print("file size: ",fileSize)
+
+                                    add, clientName = self.get_client_name(sock)
+                                    imgMsg = "["+ clientName + "]: Sent an image - "+ fileName
+
+                                    newImage = open(fileName,"wb")
+                                    print("received file name")
+
+                                    currentSize = 0
+                                    image = sock.recv(40960000)
+                                    newImage.write(image)
+                                    currentSize +=len(image)
+                                    # Compare current file size with expected
+                                    while(image):
+                                        print("receiving image...")
+                                        if currentSize >= fileSize:
+                                            break
+                                        image = sock.recv(40960000)
+                                        newImage.write(image)
+                                        currentSize +=len(image)
+                                        print("current size:", currentSize)
+                                        
+
+                                    newImage.close()
+                                    print("Finished recieving Image")
+
+                                    for clientInfo in receiversClients:
+                                        cSock =self.clientSockets[clientInfo]
+                                        send(cSock, [3,fileName,imgMsg])
 
 
 

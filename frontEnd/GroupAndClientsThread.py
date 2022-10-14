@@ -59,23 +59,24 @@ class GroupAndClientsThread(QThread):
                                 self.groupNames.emit(data[1])
                                 self.groupMembersUpdated.emit(True)
                                 break
-                            elif(index == len(data[1].values())-1):
+
+                            elif(index == len(data[1].values())-1): # if the member list hasn't changed
                                 self.groupMembersUpdated.emit(False)
                             index+=1
             else:
                 sleep(1)
             
         
-        print("Finished client thread")
+        # print("Finished client thread")
 
     def stop(self):
-        print("stopping thread")
+        # print("stopping thread")
         self.scanSocket = False
 
     def pauseThread(self):
-        print("pausing thread")
+        # print("pausing thread")
         self.pause = True
 
     def restart(self):
-        print("restarting thread")
+        # print("restarting thread")
         self.pause = False
