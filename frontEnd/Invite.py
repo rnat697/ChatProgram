@@ -2,9 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-
 class InviteMenu(QWidget):
-    inviteThreadFinished = pyqtSignal()
     def __init__(self,client, memberList,groupName, allClients):
         super().__init__()
         self.client = client
@@ -12,7 +10,7 @@ class InviteMenu(QWidget):
         self.groupName = groupName
         self.nonMembers  = []
         self.allClients = allClients
-        self.updateClientAvailInfo = True
+        self.updateClientAvailInfo = True # keeps track of when the client information is currently being updated
         self.initUI()
         self.initAvailClients()
         self.display()
@@ -69,7 +67,7 @@ class InviteMenu(QWidget):
         if(len(self.nonMembers)>0):
             for availableClients in self.nonMembers:
                 name = availableClients[2]
-                self.tbClientsAvail.append(name)
+                self.tbClientsAvail.append(name) # add names of non-members of the group chat to the textbrowser
             self.updateClientAvailInfo = False # update flag for text browser cursor position changed
 
     def display(self):
@@ -80,6 +78,7 @@ class InviteMenu(QWidget):
         self.btnInvite.clicked.connect(self.inviteClients)
         self.tbClientsAvail.cursorPositionChanged.connect(self.onTextBrowserCursorPosChanged)
 
+    # To allow the user to select a client name in the text browser
     def onTextBrowserCursorPosChanged(self):
         # from https://stackoverflow.com/questions/60139804/highlighting-lines-on-qtextedit-document
         # and https://stackoverflow.com/questions/22698105/qtextbrowser-how-to-highlight-a-clicked-line
@@ -105,12 +104,10 @@ class InviteMenu(QWidget):
             self.blockNum = -1
 
     def inviteClients(self):
-        if(self.blockNum != -1):
+        if(self.blockNum != -1): # check if user has clicked on a name
             receiver = self.nonMembers[self.blockNum]
             print("Sending invite to: ",receiver)
-            
-            # format is 3 flag, receiver, groupName
-            self.client.sendData([3,receiver,self.groupName])
+            self.client.sendData([3,receiver,self.groupName]) # send invite information to server
 
         
     def exitApplication(self):

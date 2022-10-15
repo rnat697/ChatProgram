@@ -1,13 +1,11 @@
 from PyQt5.QtCore import QThread, pyqtSignal, QObject, pyqtSlot
 from time import sleep
 
+# Checks for any invites, updates to the list of groups, clients and group members sent by the server
 class GroupAndClientsThread(QThread):
     clientNames = pyqtSignal(dict) 
     groupNames = pyqtSignal(dict)
-    groupMembersUpdated = pyqtSignal(bool)
     inviteMsg = pyqtSignal(str) 
-
-
 
     def __init__(self,client):
         super().__init__()
@@ -35,7 +33,7 @@ class GroupAndClientsThread(QThread):
                     if(data[0] == 1):
                         msg = data[1]
                         print(msg)
-                        self.inviteMsg.emit(msg)
+                        self.inviteMsg.emit(msg) #emit invite message
 
                     # check if data at position 0 is a dictionary which means server sent the list of clients and groups
                     if(type(data[0]) == dict):
@@ -57,26 +55,17 @@ class GroupAndClientsThread(QThread):
                             if (prevlengthofMembers[index] < len(members) or prevlengthofMembers[index] > len(members)):
                                 prevlengthofMembers[index] = len(members)
                                 self.groupNames.emit(data[1])
-                                self.groupMembersUpdated.emit(True)
                                 break
-
-                            elif(index == len(data[1].values())-1): # if the member list hasn't changed
-                                self.groupMembersUpdated.emit(False)
                             index+=1
             else:
                 sleep(1)
             
-        
-        # print("Finished client thread")
 
     def stop(self):
-        # print("stopping thread")
         self.scanSocket = False
 
     def pauseThread(self):
-        # print("pausing thread")
         self.pause = True
 
     def restart(self):
-        # print("restarting thread")
         self.pause = False

@@ -1,9 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
-import sys
 
-#temp
 from frontEnd.ChatConnected import ChatConnectedMenu
 from backEnd.client import ChatClient
 
@@ -17,7 +15,7 @@ class ChatConnectionMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('Connect To Chat')
-        self.setGeometry(800, 300, 450, 330)  # (x,x,horizontal,vertical)
+        self.setGeometry(800, 300, 450, 330) 
         self.setMinimumHeight(200)
         self.setMinimumWidth(300)
 
@@ -62,7 +60,7 @@ class ChatConnectionMenu(QWidget):
             self.error_dialog.showMessage('Incorrect address or port. Correct address and port format - Address: localhost  Port: 9988. Name can not be empty')
         else:
             print(address,name,port)
-            self.client = ChatClient(name,port,address)
+            self.client = ChatClient(name,port,address) # connects client socket to server
             self.connectionMenu = ChatConnectedMenu(self.client,name)
 
     def connectActions(self):
@@ -73,9 +71,3 @@ class ChatConnectionMenu(QWidget):
     def display(self):
         self.show()
 
-# delete later
-# if __name__ == '__main__':
-#    app = QApplication(sys.argv)
-#    ex = ChatConnectionMenu()
-#    ex.display();
-#    sys.exit(app.exec_())

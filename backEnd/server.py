@@ -19,14 +19,13 @@ class ChatServer(object):
         self.clients = 0
         self.clientmap = {}
         self.listOfAllClients = {}
-        self.clientGroupHost = {}
         self.clientSockets = {}
         self.numGroups = 0
         self.groups = {}
 
         self.outputs = []  # list output sockets
 
-        # Encryption using SSL/TLSv1.2 and cipher AES
+        # Encryption using SSL/TLSv1.2 and cipher AES from Lab 8
         self.context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         self.context.load_cert_chain(certfile="cert.pem", keyfile="cert.pem")
         self.context.load_verify_locations('cert.pem')
@@ -81,15 +80,13 @@ class ChatServer(object):
             self.numGroups -= 1
             del self.groups[groupsRemove]
 
-        # Other deletes for client lists
+        # Delete client in other lists
         del self.listOfAllClients[(addrLeft[0],addrLeft[1],nameLeft)]
-        del self.clientGroupHost[(addrLeft[0],addrLeft[1],nameLeft)]
         clientLeft = self.clientSockets[(addrLeft[0], addrLeft[1], nameLeft)]
         del self.clientmap[clientLeft]
         del self.clientSockets[addrLeft[0],addrLeft[1],nameLeft]
 
     def run(self):
-        # inputs = [self.server, sys.stdin]
         inputs = [self.server]
         self.outputs = []
         running = True
@@ -118,12 +115,8 @@ class ChatServer(object):
 
                     self.clientmap[client] = (address, cname)
                     self.clientSockets[(address[0], address[1], cname)] = client
-                    self.clientGroupHost[(address[0], address[1], cname)] =  []
                     self.listOfAllClients[(address[0], address[1], cname)] = []
-                    # Send joining information to other clients
-                    # msg = f'\n(Connected: New client ({self.clients}) from {self.get_client_name(client)})'
-                    # for output in self.outputs:
-                    #     send(output, msg)
+        
                     self.outputs.append(client)
 
                 else:
@@ -131,14 +124,7 @@ class ChatServer(object):
                     try:
                         data = receive(sock)
                         if data:
-                            # Send as new client's message...
-                            # msg = f'\n#[{self.get_client_name(sock)}]>> {data}'
-
-                            # # Send data to all except ourself
-                            # for output in self.outputs:
-                            #     if output != sock:
-                            #         send(output, msg)
-
+                           
                             # To differentiate between client to client messages and thread requests
                             if (type(data) == int): 
                                 if(data == 2): # when thread requests for list of all clients and groups
@@ -150,7 +136,6 @@ class ChatServer(object):
                                     groupName = "Group Chat " + str(self.numGroups) + " by " + hostName
                                     print(groupName, "is made")
                                     host  = (add[0],add[1], hostName)
-                                    self.clientGroupHost[(add[0], add[1], hostName)] =  [groupName]
                                     self.groups[(groupName,hostName)] = [host]
 
                             
@@ -224,7 +209,7 @@ class ChatServer(object):
                                     newImage.close()
                                     print("Finished recieving Image")
 
-                                    for clientInfo in receiversClients:
+                                    for clientInfo in receiversClients: # send file name and image message to clients
                                         cSock =self.clientSockets[clientInfo]
                                         send(cSock, [3,fileName,imgMsg])
 
@@ -232,6 +217,7 @@ class ChatServer(object):
 
 
                         else:  
+                            # Closing client sockets and removing them from lists
                             addrLeft, nameLeft = self.get_client_name(sock)
                             print(f'Chat server: {sock.fileno()} - {nameLeft} hung up')
                             self.clients -= 1
@@ -240,11 +226,6 @@ class ChatServer(object):
                             self.outputs.remove(sock)
                             self.removeClientFromLists(addrLeft,nameLeft)
 
-                            
-                            # msg = f'\n(Now hung up: Client from {addrLeft,name})'
-
-                            # for output in self.outputs:
-                            #     send(output, msg)
                     except socket.error as e:
                         # Remove
                         inputs.remove(sock)

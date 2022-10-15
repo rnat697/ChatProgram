@@ -1,4 +1,3 @@
-from http import client
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -34,7 +33,7 @@ class ChatConnectedMenu(QWidget):
     def initUI(self):
         #main window size and title
         self.setWindowTitle('Chat Connected')
-        self.setGeometry(800, 300, 400, 500)  # (x,x,horizontal,vertical)
+        self.setGeometry(800, 300, 400, 500)  
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)
         self.highlightLine= False
@@ -67,12 +66,12 @@ class ChatConnectedMenu(QWidget):
         grid.addWidget(self.btnExit,5,1)
     
 
-
+    # To allow user to click on the client connected text browser and highlight what they clicked
     def onTextBrowserClientCursorPosChanged(self):
         # from https://stackoverflow.com/questions/60139804/highlighting-lines-on-qtextedit-document
         # and https://stackoverflow.com/questions/22698105/qtextbrowser-how-to-highlight-a-clicked-line
-
-        if(self.updateClientInfo == False): # Only highlight when user is the one clicking on the lines, not when updating the client info by appending to text browser
+        # Only highlight when user is the one clicking on the lines, not when updating the client info by appending to text browser
+        if(self.updateClientInfo == False): 
 
             self.fmt =  QTextBlockFormat()
             self.fmt.setBackground(QtGui.QColor('lightGray'))
@@ -93,11 +92,12 @@ class ChatConnectedMenu(QWidget):
         else:
             self.blockNumClient = -1
         
+      # To allow user to click on the group chats text browser and highlight what they clicked
     def onTextBrowserGroupCursorPosChanged(self):
         # from https://stackoverflow.com/questions/60139804/highlighting-lines-on-qtextedit-document
         # and https://stackoverflow.com/questions/22698105/qtextbrowser-how-to-highlight-a-clicked-line
-
-        if(self.updateGroupInfo == False): # Only highlight when user is the one clicking on the lines, not when updating the client info by appending to text browser
+        # Only highlight when user is the one clicking on the lines, not when updating the group info by appending to text browser
+        if(self.updateGroupInfo == False):
 
             self.fmt =  QTextBlockFormat()
             self.fmt.setBackground(QtGui.QColor('lightGray'))
@@ -140,7 +140,6 @@ class ChatConnectedMenu(QWidget):
             clientInfo = self.clientInfoList[self.clientIndex]
             clientExists = False
             groupHost = groupMembers[0][2]
-            # prevMemberLength = len(groupMembers)
 
             # Check if client is a member of the group chat
             for member in groupMembers:
@@ -153,7 +152,7 @@ class ChatConnectedMenu(QWidget):
                 self.client.sendData([2,groupName,clientInfo,groupHost])
                 print("membership requested")
                 self.connectClientToGC = True
-                # wait until signal is emitted for the member list being updated
+                # wait until signal is emitted for the member list being updated before opening the Group chat window
             else:
                 # if client is already a member, just connect to the group chat
                 self.connectClientToGC = True
@@ -161,6 +160,7 @@ class ChatConnectedMenu(QWidget):
 
         
         elif(self.receivedInviteMsg):
+            # When accepted an invite to the group chat, let them join the group
             print("initialising data from invite")
             groupName = self.receivedInviteMsg.split("//")[1]
             index = self.groupNameList.index(groupName)
@@ -173,8 +173,9 @@ class ChatConnectedMenu(QWidget):
             print("membership requested")
 
             self.connectClientToGC = True
-            # wait until signal is emitted for the member list being updated
+            # wait until signal is emitted for the member list being updated before opening the Group chat window
 
+    # Opens the group chat window
     def connectToGroupChat(self):
         if(self.connectClientToGC):
             # connect to group chat
@@ -196,7 +197,7 @@ class ChatConnectedMenu(QWidget):
         self.close()
     
     def connectToOneToOneChat(self):
-        if((self.blockNumClient != -1) and (self.blockNumClient != self.clientIndex)):
+        if((self.blockNumClient != -1) and (self.blockNumClient != self.clientIndex)): # Checks if client has clicked on a valid name
             self.threadClients.pauseThread() # pauses the thread for getting group and clients info in order to not hog the server while messaging chats are running
             
             # find corresponding participant name and details
@@ -273,7 +274,6 @@ class ChatConnectedMenu(QWidget):
         showInvite = invite.exec_()
 
     def inviteDialogBtnsClick(self, i):
-        print(i.text())
         if(i.text() == "&Yes"): # if user wants to join run join group function
             self.joinGroup()
 
@@ -286,10 +286,3 @@ class ChatConnectedMenu(QWidget):
         self.threadClients.inviteMsg.connect(self.showInviteDialog)
         self.threadClients.start()
     
-
-# delete later
-# if __name__ == '__main__':
-#    app = QApplication(sys.argv)
-#    ex = ChatConnectionMenu()
-#    ex.display();
-#    sys.exit(app.exec_())

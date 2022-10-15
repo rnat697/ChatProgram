@@ -3,7 +3,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 import os
 
-import sys
 from frontEnd.GroupMessagesThread import GroupMessagesThread
 from frontEnd.Invite import InviteMenu
 from frontEnd.SendImagesThread import SendImagesThread
@@ -110,6 +109,7 @@ class GroupChatMenu(QWidget):
 
 
     def showInviteMenu(self):
+        # opens the invite menu
         self.inviteMenu = InviteMenu(self.client,self.memberList,self.groupName,self.allClients)
    
     def sendMessageAction(self):
@@ -137,6 +137,7 @@ class GroupChatMenu(QWidget):
             self.tbMembers.append(name)
     
     def updateMemberList(self,memList):
+        # update the member list whenever anyone new joins the group chat
         self.tbMembers.clear()
         self.memberList.clear()
         for member in memList:
@@ -164,24 +165,16 @@ class GroupChatMenu(QWidget):
         html = f'''<img src="{imgFileName}" width= "200" height="200">'''
         self.teGroupMessages.append(imageMsg) # shows the message - [client name]: Sent an image - image file name
         self.teGroupMessages.append("")
-        self.teGroupMessages.insertHtml(html)
+        self.teGroupMessages.insertHtml(html) # shows the image on a new line
         
         
     def closeEvent(self, event):
-        self.closed.emit()
+        self.closed.emit() # emit close event so ChatConnected knows to unpause their thread
      
-     # Thread to receive messages from members and receive updated member list
+     # Thread to receive messages from members, receive updated member list and receive any image file names that was sent
     def runGroupMessagesThread(self):
         self.groupMsgThread = GroupMessagesThread(self.client)
         self.groupMsgThread.message.connect(self.showMessages)
         self.groupMsgThread.members.connect(self.updateMemberList)
         self.groupMsgThread.imageFileName.connect(self.showImage)
         self.groupMsgThread.start()
-
-
-# delete later
-# if __name__ == '__main__':
-#    app = QApplication(sys.argv)
-#    ex = GroupChatMenu()
-#    ex.display()
-#    sys.exit(app.exec_())

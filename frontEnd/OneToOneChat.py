@@ -63,6 +63,7 @@ class OneToOneChatMenu(QWidget):
         self.btnSendImg.clicked.connect(self.sendImageAction)
         
 
+    # sending image data to server so it can send to the other client
     def sendImageAction(self): 
         imageDir = self.openFileExplorer()
 
@@ -117,11 +118,9 @@ class OneToOneChatMenu(QWidget):
         imgFileName = dataArray[1]
         html = f'''<img src="{imgFileName}" width= "200" height="200">'''
         self.teMessages.append(imageMsg) # shows the message - [client name]: Sent an image - image file name
-        self.teMessages.append("")
-        self.teMessages.insertHtml(html)
-        
-
-
+        self.teMessages.append("") # new line
+        self.teMessages.insertHtml(html) # shows image on the text edit
+    
         
     def closeEvent(self, event):
         self.closed.emit()
@@ -132,11 +131,3 @@ class OneToOneChatMenu(QWidget):
         self.msgThread.message.connect(self.showMessages)
         self.msgThread.imageFileName.connect(self.showImage)
         self.msgThread.start()
-
-
-# delete later
-# if __name__ == '__main__':
-#    app = QApplication(sys.argv)
-#    ex = OneToOneChatMenu()
-#    ex.display();
-#    sys.exit(app.exec_())
