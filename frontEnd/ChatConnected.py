@@ -11,6 +11,7 @@ from frontEnd.GroupChat import GroupChatMenu
 
 
 class ChatConnectedMenu(QWidget):
+    memberListHasUpdated = pyqtSignal()
     def __init__(self,client,clientName):
         super().__init__()
         self.client = client
@@ -21,8 +22,10 @@ class ChatConnectedMenu(QWidget):
         self.blockNumClient = -1
         self.clientIndex = -1
         self.blockNumGroup = -1
+        self.memberListIndex = -1
         self.receivedInviteMsg = ""
-
+        self.memberListHasUpdated.connect(self.connectToGroupChat)
+        self.connectClientToGC = False
 
         self.initUI()
         self.display()
@@ -130,11 +133,13 @@ class ChatConnectedMenu(QWidget):
     def joinGroup(self):
         if(self.blockNumGroup != -1): # check if user has clicked on a group chat
             # find corresponding information needed to use group chat
+            self.memberListIndex = self.blockNumGroup
             groupName = self.groupNameList[self.blockNumGroup]
             groupMembers = self.groupsMemberList[self.blockNumGroup]
             clientInfo = self.clientInfoList[self.clientIndex]
             clientExists = False
             groupHost = groupMembers[0][2]
+            # prevMemberLength = len(groupMembers)
 
             # Check if client is a member of the group chat
             for member in groupMembers:
@@ -146,51 +151,42 @@ class ChatConnectedMenu(QWidget):
             if(not clientExists):
                 self.client.sendData([2,groupName,clientInfo,groupHost])
                 print("membership requested")
-                
-                # Wait until server sends back the updated members list
-                while(True):
-                    if(self.memberListUpdated):
-                        break
+                self.connectClientToGC = True
+                # wait until signal is emitted for the member list being updated
+            else:
+                # if client is already a member, just connect to the group chat
+                self.connectClientToGC = True
+                self.connectToGroupChat()
 
-            # connect to group chat
-            groupMembers = self.groupsMemberList[self.blockNumGroup] # list of members should be updated
-            self.threadClients.pauseThread() # pauses the thread for getting group and clients info
-            print("connecting to group chat")
-            self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName,self.clientInfoList)
-            self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
         
         elif(self.receivedInviteMsg):
             print("initialising data from invite")
             groupName = self.receivedInviteMsg.split("//")[1]
             index = self.groupNameList.index(groupName)
+            self.memberListIndex = index
             groupMembers = self.groupsMemberList[index]
             clientInfo = self.clientInfoList[self.clientIndex]
 
             groupHost = groupMembers[0][2]
             self.client.sendData([2,groupName,clientInfo,groupHost])
             print("membership requested")
-            # Wait until server sends back the updated members list
-            while(True):
-                if(self.memberListUpdated):
-                    print("memberlist updated?")
-                    break
 
-             # connect to group chat
-            groupMembers = self.groupsMemberList[index] # list of members should be updated
+            self.connectClientToGC = True
+            # wait until signal is emitted for the member list being updated
+
+    def connectToGroupChat(self):
+        if(self.connectClientToGC):
+            # connect to group chat
+            groupName = self.groupNameList[self.memberListIndex]
+            groupMembers = self.groupsMemberList[self.memberListIndex]
+            clientInfo = self.clientInfoList[self.clientIndex]
+
             self.threadClients.pauseThread() # pauses the thread for getting group and clients info
             print("connecting to group chat")
             self.groupChat = GroupChatMenu(self.client,clientInfo,groupMembers,groupName,self.clientInfoList)
             self.groupChat.closed.connect(self.unpauseThread) # unpause thread once window is closed
-
+            self.connectClientToGC = False
     
-    def checkMemberListUpdate(self, isUpdated):
-        # checks if member lists in group chats are changed. This is mostly used when users are new to the group chat
-        # to check if the member list has been updated
-        if(isUpdated):
-            self.memberListUpdated = True
-        else:
-            self.memberlistUpdated = False
-
 
     def exitApplication(self):
         self.threadClients.quit()
@@ -242,8 +238,9 @@ class ChatConnectedMenu(QWidget):
         # Goes through the group dictionary and adds the name of the groups to the text browser
         self.updateGroupInfo = True
         self.tbGroupChats.clear() # clears it first to avoid duplications
-        self.groupNameList.clear()
+        self.groupNameList.clear()    
         self.groupsMemberList.clear()
+
         for items in info.keys():
             if(not items): # Dont add anything if its empty
                 break
@@ -252,11 +249,14 @@ class ChatConnectedMenu(QWidget):
                 self.groupNameList.append(groupName)
                 print("GROUP NAME: ", groupName)
                 self.tbGroupChats.append(groupName)
-        
+
         # update member list where an element of the list contains the corresponding members for the group
         for members in info.values():
-            self.groupsMemberList.append(members)   
+            self.groupsMemberList.append(members)
+        
         self.updateGroupInfo = False
+        self.memberListHasUpdated.emit() # emit a signal to so a new member of a group chat can connect when the member list has been updated
+        print("array of members updated")
 
     def showInviteDialog(self,msg):
         print("dialogue")
@@ -282,7 +282,6 @@ class ChatConnectedMenu(QWidget):
         self.threadClients.clientNames.connect(self.showClientInfo)
         self.threadClients.groupNames.connect(self.showGroupsInfo)
         self.threadClients.inviteMsg.connect(self.showInviteDialog)
-        self.threadClients.groupMembersUpdated.connect(self.checkMemberListUpdate)
         self.threadClients.start()
     
 
