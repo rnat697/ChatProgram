@@ -134,6 +134,7 @@ class ChatConnectedMenu(QWidget):
         if(self.blockNumGroup != -1): # check if user has clicked on a group chat
             # find corresponding information needed to use group chat
             self.memberListIndex = self.blockNumGroup
+            print("Member index = ", self.memberListIndex)
             groupName = self.groupNameList[self.blockNumGroup]
             groupMembers = self.groupsMemberList[self.blockNumGroup]
             clientInfo = self.clientInfoList[self.clientIndex]
@@ -177,6 +178,7 @@ class ChatConnectedMenu(QWidget):
     def connectToGroupChat(self):
         if(self.connectClientToGC):
             # connect to group chat
+            print("Member index in checking = ", self.memberListIndex)
             groupName = self.groupNameList[self.memberListIndex]
             groupMembers = self.groupsMemberList[self.memberListIndex]
             clientInfo = self.clientInfoList[self.clientIndex]

@@ -1,10 +1,12 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+import os
 
 import sys
 from frontEnd.GroupMessagesThread import GroupMessagesThread
 from frontEnd.Invite import InviteMenu
+from frontEnd.SendImagesThread import SendImagesThread
 
 class GroupChatMenu(QWidget):
     closed = pyqtSignal() # For Chat Connected Menu to know if window is closed, modified from https://stackoverflow.com/a/67519553
@@ -25,7 +27,7 @@ class GroupChatMenu(QWidget):
 
     def initUI(self):
         #main window size and title
-        self.setWindowTitle('One To One Chat')
+        self.setWindowTitle('Group Chat')
         self.setGeometry(600, 200, 800, 700) 
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)
@@ -72,17 +74,44 @@ class GroupChatMenu(QWidget):
         self.btnExit.clicked.connect(self.exitApplication)
         self.btnSendMsg.clicked.connect(self.sendMessageAction)
         self.btnInvite.clicked.connect(self.showInviteMenu)
+        self.btnSendImg.clicked.connect(self.sendImageAction)
+
+    def sendImageAction(self): 
+        imageDir = self.openFileExplorer()
+
+        if(imageDir): # check if response is not empty (if it isn't that means the user has picked an image)
+            image = open(imageDir,"rb")
+            print('img dir: ', imageDir)
+            fileName = os.path.basename(imageDir)
+            print("fileName: ", fileName)
+            fileSize = os.path.getsize(imageDir)
+
+            # using threads to send the image to the server. It will download the images to the ChatProgram parent folder
+            self.sendImg = SendImagesThread(self.client,image,self.memberList,fileName,fileSize)
+            self.sendImg.finished.connect(self.closeSendImageThread)
+            self.sendImg.start()
+    
+    def closeSendImageThread(self):
+        self.sendImg.stopThread()
+        self.sendImg.quit()
+
+    def openFileExplorer(self):
+        # Opens a file explorer for user to find an image to send
+        file_filter = 'JPEG(*.jpg *.jpeg);; PNG(*.png)'
+        response = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Select an image file to send",
+            directory=os.getcwd(),
+            filter= file_filter,
+            initialFilter= "PNG(*.png)"
+        )
+        return response[0]
+     
+
 
     def showInviteMenu(self):
-        #self.groupMsgThread.pauseThread()
         self.inviteMenu = InviteMenu(self.client,self.memberList,self.groupName,self.allClients)
-        #self.inviteMenu.inviteThreadFinished.connect(self.unpauseGroupThread)
-        #print("Group Thread paused")
-    
-    # def unpauseGroupThread(self):
-    #     print("Group Thread unpaused")
-    #     self.groupMsgThread.unpauseThread()
-    
+   
     def sendMessageAction(self):
         msg = self.leMessageBoxGroup.text()
         self.leMessageBoxGroup.clear() # clear line edit
@@ -127,6 +156,16 @@ class GroupChatMenu(QWidget):
 
     def showMessages(self,msg):
         self.teGroupMessages.append(msg) # show messages on textedit 
+    
+    def showImage(self,dataArray):
+        # modified from https://stackoverflow.com/questions/73634833/text-aside-and-below-an-image-in-pyqt5
+        imageMsg = dataArray[2]
+        imgFileName = dataArray[1]
+        html = f'''<img src="{imgFileName}" width= "200" height="200">'''
+        self.teGroupMessages.append(imageMsg) # shows the message - [client name]: Sent an image - image file name
+        self.teGroupMessages.append("")
+        self.teGroupMessages.insertHtml(html)
+        
         
     def closeEvent(self, event):
         self.closed.emit()
@@ -136,6 +175,7 @@ class GroupChatMenu(QWidget):
         self.groupMsgThread = GroupMessagesThread(self.client)
         self.groupMsgThread.message.connect(self.showMessages)
         self.groupMsgThread.members.connect(self.updateMemberList)
+        self.groupMsgThread.imageFileName.connect(self.showImage)
         self.groupMsgThread.start()
 
 

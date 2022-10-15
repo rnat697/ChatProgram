@@ -4,6 +4,7 @@ from time import sleep
 class GroupMessagesThread(QThread):
     message = pyqtSignal(str)
     members = pyqtSignal(list)
+    imageFileName = pyqtSignal(list)
 
     def __init__(self,client):
         super().__init__()
@@ -30,6 +31,10 @@ class GroupMessagesThread(QThread):
                 if(data[0] == 2):
                     self.members.emit(data[1])
                     print("group members updated")
+                
+                if(data[0] == 3): # Check if image has been downloaded to server
+                    self.imageFileName.emit(data)
+                    print("Image received")
 
   
     

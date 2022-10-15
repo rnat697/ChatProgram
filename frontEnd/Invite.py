@@ -20,7 +20,7 @@ class InviteMenu(QWidget):
 
     def initUI(self):
         #main window size and title
-        self.setWindowTitle('One To One Chat')
+        self.setWindowTitle('Invite to Group Chat')
         self.setGeometry(700, 200, 400, 600) 
         self.setMinimumHeight(300)
         self.setMinimumWidth(200)

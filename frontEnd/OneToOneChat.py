@@ -63,8 +63,7 @@ class OneToOneChatMenu(QWidget):
         self.btnSendImg.clicked.connect(self.sendImageAction)
         
 
-    def sendImageAction(self): # Attempted to send images to server. Server should download the image into a folder serverImages
-        # Currently, running this action causes GUI to crash.
+    def sendImageAction(self): 
         imageDir = self.openFileExplorer()
 
         if(imageDir): # check if response is not empty (if it isn't that means the user has picked an image)
@@ -74,27 +73,17 @@ class OneToOneChatMenu(QWidget):
             print("fileName: ", fileName)
             fileSize = os.path.getsize(imageDir)
 
+            # using threads to send the image to the server. It will download the images to the ChatProgram parent folder
             self.sendImg = SendImagesThread(self.client,image,self.participants,fileName,fileSize)
             self.sendImg.finished.connect(self.closeSendImageThread)
             self.sendImg.start()
-        #     self.client.sendData([4,fileName,self.participants])
-        #     print("waiting response")
-
-        #     data = self.client.getData()
-        #     print(data)
-        #     if(data == 9):
-        #         print("got response")
-        #         imageBytes = image.read(40960000)
-        #         while(imageBytes):
-        #             print("sending image...")
-        #             self.client.sendImageAll(imageBytes)
-        #             imageBytes = image.read(40960000)
-        #     image.close()
+   
     def closeSendImageThread(self):
         self.sendImg.stopThread()
         self.sendImg.quit()
 
     def openFileExplorer(self):
+        # Opens a file explorer for user to find an image to send
         file_filter = 'JPEG(*.jpg *.jpeg);; PNG(*.png)'
         response = QFileDialog.getOpenFileName(
             parent=self,
@@ -127,7 +116,7 @@ class OneToOneChatMenu(QWidget):
         imageMsg = dataArray[2]
         imgFileName = dataArray[1]
         html = f'''<img src="{imgFileName}" width= "200" height="200">'''
-        self.teMessages.append(imageMsg)
+        self.teMessages.append(imageMsg) # shows the message - [client name]: Sent an image - image file name
         self.teMessages.append("")
         self.teMessages.insertHtml(html)
         
