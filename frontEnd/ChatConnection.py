@@ -57,13 +57,13 @@ class ChatConnectionMenu(QWidget):
         name = self.nicknameLineEdit.text()
         port = self.portLineEdit.text()
 
-        if (address and name and port): # check if line edits are not empty
-            if(address != "localhost" or port != "9988"):
-                self.error_dialog.showMessage('Incorrect address or port. Correct address and port format - Address: localhost  Port: 9988')
-            else:
-                print(address,name,port)
-                self.client = ChatClient(name,port,address)
-                self.connectionMenu = ChatConnectedMenu(self.client,name)
+        # check if line edits are not empty
+        if(address != "localhost" or port != "9988" or name ==""):
+            self.error_dialog.showMessage('Incorrect address or port. Correct address and port format - Address: localhost  Port: 9988. Name can not be empty')
+        else:
+            print(address,name,port)
+            self.client = ChatClient(name,port,address)
+            self.connectionMenu = ChatConnectedMenu(self.client,name)
 
     def connectActions(self):
         self.exitBtn.clicked.connect(QCoreApplication.instance().quit)
